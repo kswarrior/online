@@ -1,0 +1,307 @@
+#!/bin/bash
+# ██╗  ██╗███████╗    ██╗    ██╗ █████╗ ██████╗ ██████╗ ██╗ ██████╗ ██████╗ 
+# ██║ ██╔╝██╔════╝    ██║    ██║██╔══██╗██╔══██╗██╔══██╗██║██╔═══██╗██╔══██╗
+# █████╔╝ ███████╗    ██║ █╗ ██║███████║██████╔╝██████╔╝██║██║   ██║██████╔╝
+# ██╔═██╗ ╚════██║    ██║███╗██║██╔══██║██╔══██╗██╔══██╗██║██║   ██║██╔══██╗
+# ██║  ██╗███████║    ╚███╔███╔╝██║  ██║██║  ██║██║  ██║██║╚██████╔╝██║  ██║
+# ╚═╝  ╚═╝╚══════╝     ╚══╝╚══╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝ ╚═════╝ ╚═╝  ╚═╝
+# 
+# ██████╗ ███████╗██╗   ██╗ ██████╗██╗  ██╗███████╗██████╗ 
+# ██╔══██╗██╔════╝██║   ██║██╔════╝██║ ██╔╝██╔════╝██╔══██╗
+# ██║  ██║█████╗  ██║   ██║██║     █████╔╝ █████╗  ██████╔╝
+# ██║  ██║██╔══╝  ╚██╗ ██╔╝██║     ██╔═██╗ ██╔══╝  ██╔══██╗
+# ██████╔╝███████╗ ╚████╔╝ ╚██████╗██║  ██╗███████╗██║  ██║
+# ╚═════╝ ╚══════╝  ╚═══╝   ╚═════╝╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝
+#
+# Created by: KS Warrior
+# Mission: Eternal Codespace Vigilance
+# Version: 2.0.0-KS
+
+# ██╗  ██╗███████╗    ████████╗██╗  ██╗███████╗    ██╗  ██╗███████╗██╗   ██╗
+# ██║ ██╔╝██╔════╝    ╚══██╔══╝██║  ██║██╔════╝    ██║ ██╔╝██╔════╝╚██╗ ██╔╝
+# █████╔╝ ███████╗       ██║   ███████║█████╗      █████╔╝ █████╗   ╚████╔╝ 
+# ██╔═██╗ ╚════██║       ██║   ██╔══██║██╔══╝      ██╔═██╗ ██╔══╝    ╚██╔╝  
+# ██║  ██╗███████║       ██║   ██║  ██║███████╗    ██║  ██╗███████╗   ██║   
+# ╚═╝  ╚═╝╚══════╝       ╚═╝   ╚═╝  ╚═╝╚══════╝    ╚═╝  ╚═╝╚══════╝   ╚═╝   
+#                    THE KEEPALIVE STANDARD
+
+# ═══════════════════════════════════════════════════════════════════════════
+# KS CONFIGURATION
+# ═══════════════════════════════════════════════════════════════════════════
+
+KS_INTERVAL=300          # KS Cycle: 5 minutes between activity bursts
+KS_LOG_FILE="/tmp/ks_warrior.log"
+KS_PID_FILE="/tmp/ks_warrior.pid"
+KS_HEARTBEAT_DIR="/tmp/.ks_heartbeats"
+KS_SYMBOL="⚔️ KS"
+KS_VERSION="2.0.0"
+
+# ═══════════════════════════════════════════════════════════════════════════
+# KS VISUAL IDENTITY
+# ═══════════════════════════════════════════════════════════════════════════
+
+KS_RED='\033[0;31m'
+KS_GREEN='\033[0;32m'
+KS_YELLOW='\033[1;33m'
+KS_CYAN='\033[0;36m'
+KS_PURPLE='\033[0;35m'
+KS_BOLD='\033[1m'
+KS_NC='\033[0m'
+
+# ═══════════════════════════════════════════════════════════════════════════
+# KS CORE FUNCTIONS
+# ═══════════════════════════════════════════════════════════════════════════
+
+ks_log() {
+    local ks_timestamp=$(date '+%Y-%m-%d %H:%M:%S')
+    echo -e "${KS_GREEN}[${KS_SYMBOL}]${KS_NC} ${KS_CYAN}${ks_timestamp}${KS_NC} $1" | tee -a "$KS_LOG_FILE"
+}
+
+ks_banner() {
+    clear
+    echo -e "${KS_PURPLE}"
+    echo "    ██╗  ██╗███████╗    ██╗    ██╗ █████╗ ██████╗ ██████╗ ██╗ ██████╗ ██████╗ "
+    echo "    ██║ ██╔╝██╔════╝    ██║    ██║██╔══██╗██╔══██╗██╔══██╗██║██╔═══██╗██╔══██╗"
+    echo "    █████╔╝ ███████╗    ██║ █╗ ██║███████║██████╔╝██████╔╝██║██║   ██║██████╔╝"
+    echo "    ██╔═██╗ ╚════██║    ██║███╗██║██╔══██║██╔══██╗██╔══██╗██║██║   ██║██╔══██╗"
+    echo "    ██║  ██╗███████║    ╚███╔███╔╝██║  ██║██║  ██║██║  ██║██║╚██████╔╝██║  ██║"
+    echo "    ╚═╝  ╚═╝╚══════╝     ╚══╝╚══╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝ ╚═════╝ ╚═╝  ╚═╝"
+    echo -e "${KS_CYAN}                         ⚔️  KS WARRIOR v${KS_VERSION} ⚔️${KS_NC}"
+    echo ""
+}
+
+ks_cleanup() {
+    ks_log "${KS_YELLOW}⚔️ KS Warrior standing down...${KS_NC}"
+    rm -f "$KS_PID_FILE"
+    rm -rf "$KS_HEARTBEAT_DIR"
+    echo -e "${KS_RED}[KS] Eternal vigilance ended.${KS_NC}"
+    exit 0
+}
+
+ks_trap() {
+    trap ks_cleanup SIGINT SIGTERM SIGHUP
+}
+
+# ═══════════════════════════════════════════════════════════════════════════
+# KS ACTIVITY PROTOCOLS
+# ═══════════════════════════════════════════════════════════════════════════
+
+ks_protocol_ping() {
+    # KS Network Pulse - Ping localhost
+    ping -c 1 -W 1 127.0.0.1 >/dev/null 2>&1 && echo "PULSE_OK" || echo "PULSE_WEAK"
+}
+
+ks_protocol_fileblade() {
+    # KS Fileblade - Create/Destroy temp files
+    local ks_blade="/tmp/.ks_blade_$(date +%s%N)_$$"
+    touch "$ks_blade"
+    echo "KS_WARRIOR_ACTIVE:$(date +%s)" > "$ks_blade"
+    chmod 600 "$ks_blade"
+    rm -f "$ks_blade"
+    echo "BLADE_SWUNG"
+}
+
+ks_protocol_gitwatch() {
+    # KS Gitwatch - Monitor repositories
+    if [ -d ".git" ]; then
+        git status --short >/dev/null 2>&1
+        echo "GITWATCH_ACTIVE"
+    else
+        echo "GITWATCH_IDLE"
+    fi
+}
+
+ks_protocol_procscan() {
+    # KS Procscan - System surveillance
+    ps aux | head -3 >/dev/null
+    echo "PROCSCAN_CLEAR"
+}
+
+ks_protocol_cursorstrike() {
+    # KS Cursorstrike - Terminal activity
+    printf "\033[1C\033[1D" >/dev/tty 2>/dev/null || printf "\033[1C\033[1D"
+    echo "CURSOR_STRIKE"
+}
+
+ks_protocol_vscode_heart() {
+    # KS VSCode Heartbeat - IDE lifesign
+    if [ -d "/workspaces" ]; then
+        ls -la /workspaces >/dev/null 2>&1
+        echo "VSCODE_HEARTBEAT"
+    else
+        echo "VSCODE_NOPULSE"
+    fi
+}
+
+ks_protocol_workspace_drill() {
+    # KS Workspace Drill - Deep environment activity
+    find /workspaces -maxdepth 2 -type f -name "*.md" 2>/dev/null | head -1 >/dev/null
+    echo "DRILL_COMPLETE"
+}
+
+ks_protocol_heartbeat_file() {
+    # KS Persistent Heartbeat - Leave traces
+    local ks_beat="${KS_HEARTBEAT_DIR}/ks_beat_$(date +%M)"
+    mkdir -p "$KS_HEARTBEAT_DIR"
+    echo "KS_ALIVE:$(date +%s):$$" > "$ks_beat"
+    chmod 700 "$KS_HEARTBEAT_DIR"
+    echo "HEARTBEAT_FILED"
+}
+
+ks_protocol_memory_pulse() {
+    # KS Memory Pulse - RAM activity
+    free -h >/dev/null 2>&1 || vm_stat >/dev/null 2>&1 || true
+    echo "MEMORY_PULSE"
+}
+
+# ═══════════════════════════════════════════════════════════════════════════
+# KS MAIN BATTLE LOOP
+# ═══════════════════════════════════════════════════════════════════════════
+
+ks_check_singleton() {
+    if [ -f "$KS_PID_FILE" ]; then
+        local ks_existing_pid=$(cat "$KS_PID_FILE")
+        if kill -0 "$ks_existing_pid" 2>/dev/null; then
+            echo -e "${KS_RED}⚔️ KS Warrior already deployed (PID: $ks_existing_pid)${KS_NC}"
+            echo -e "${KS_YELLOW}   Run: kill $ks_existing_pid && rm -f $KS_PID_FILE${KS_NC}"
+            exit 1
+        fi
+    fi
+}
+
+ks_init() {
+    ks_check_singleton
+    mkdir -p "$KS_HEARTBEAT_DIR"
+    echo $$ > "$KS_PID_FILE"
+    ks_trap
+    ks_banner
+    ks_log "${KS_BOLD}⚔️ KS WARRIOR DEPLOYED ⚔️${KS_NC}"
+    ks_log "KS Interval: ${KS_INTERVAL}s | KS PID: $$ | KS Mode: ETERNAL"
+}
+
+ks_execute_burst() {
+    local ks_burst_num=$1
+    ks_log "${KS_PURPLE}⚔️ KS BURST #$ks_burst_num INITIATED${KS_NC}"
+    
+    # Execute all KS Protocols
+    local ks_p1=$(ks_protocol_ping)
+    local ks_p2=$(ks_protocol_fileblade)
+    local ks_p3=$(ks_protocol_gitwatch)
+    local ks_p4=$(ks_protocol_procscan)
+    local ks_p5=$(ks_protocol_cursorstrike)
+    local ks_p6=$(ks_protocol_vscode_heart)
+    local ks_p7=$(ks_protocol_workspace_drill)
+    local ks_p8=$(ks_protocol_heartbeat_file)
+    local ks_p9=$(ks_protocol_memory_pulse)
+    
+    ks_log "  ├─ KS-NetPulse:    $ks_p1"
+    ks_log "  ├─ KS-FileBlade:   $ks_p2"
+    ks_log "  ├─ KS-GitWatch:    $ks_p3"
+    ks_log "  ├─ KS-ProcScan:    $ks_p4"
+    ks_log "  ├─ KS-CursorStrike:$ks_p5"
+    ks_log "  ├─ KS-VSCodeHeart: $ks_p6"
+    ks_log "  ├─ KS-Workspace:   $ks_p7"
+    ks_log "  ├─ KS-Heartbeat:   $ks_p8"
+    ks_log "  └─ KS-Memory:      $ks_p9"
+    
+    ks_log "${KS_GREEN}⚔️ KS BURST #$ks_burst_num COMPLETE${KS_NC}"
+}
+
+ks_micro_activity() {
+    # KS Micro-pulses during sleep intervals
+    local ks_micro_count=0
+    while [ $ks_micro_count -lt $((KS_INTERVAL / 30)) ]; do
+        sleep 30
+        ks_micro_count=$((ks_micro_count + 1))
+        
+        # KS Silent operations
+        case $((ks_micro_count % 4)) in
+            0) touch "${KS_HEARTBEAT_DIR}/.ks_micro_${ks_micro_count}" 2>/dev/null ;;
+            1) echo $$ > "/tmp/.ks_active_$(date +%M)" 2>/dev/null ;;
+            2) ls -d /tmp/.ks* >/dev/null 2>&1 ;;
+            3) cat /proc/uptime >/dev/null 2>&1 ;;
+        esac
+        
+        # KS Progress indicator
+        printf "${KS_CYAN}⚔${KS_NC}"
+    done
+    echo ""
+}
+
+ks_main_loop() {
+    local ks_counter=0
+    
+    while true; do
+        ks_counter=$((ks_counter + 1))
+        
+        # KS Major Activity Burst
+        ks_execute_burst "$ks_counter"
+        
+        # KS Status report
+        ks_log "${KS_YELLOW}⚔️ KS Warrior standing watch... Next burst in ${KS_INTERVAL}s${KS_NC}"
+        
+        # KS Micro-activity during rest
+        ks_micro_activity
+        
+        ks_log "${KS_CYAN}⚔️ KS Vigilance cycle complete. Continuing eternal watch...${KS_NC}"
+        echo ""
+    done
+}
+
+# ═══════════════════════════════════════════════════════════════════════════
+# KS COMMAND INTERFACE
+# ═══════════════════════════════════════════════════════════════════════════
+
+ks_show_status() {
+    if [ -f "$KS_PID_FILE" ] && kill -0 "$(cat "$KS_PID_FILE")" 2>/dev/null; then
+        local ks_pid=$(cat "$KS_PID_FILE")
+        local ks_runtime=$(ps -o etime= -p "$ks_pid" 2>/dev/null || echo "UNKNOWN")
+        echo -e "${KS_GREEN}⚔️ KS Warrior ACTIVE${KS_NC}"
+        echo "   PID: $ks_pid"
+        echo "   Runtime: $ks_runtime"
+        echo "   Log: $KS_LOG_FILE"
+        echo "   Heartbeats: $KS_HEARTBEAT_DIR"
+        [ -f "$KS_LOG_FILE" ] && echo "   Last activity: $(tail -1 "$KS_LOG_FILE" 2>/dev/null | cut -d' ' -f2-3)"
+    else
+        echo -e "${KS_RED}⚔️ KS Warrior INACTIVE${KS_NC}"
+        [ -f "$KS_PID_FILE" ] && rm -f "$KS_PID_FILE"
+    fi
+}
+
+ks_stop() {
+    if [ -f "$KS_PID_FILE" ]; then
+        local ks_pid=$(cat "$KS_PID_FILE")
+        kill "$ks_pid" 2>/dev/null && echo -e "${KS_GREEN}⚔️ KS Warrior (PID: $ks_pid) terminated${KS_NC}" || echo -e "${KS_RED}⚔️ KS Warrior process not found${KS_NC}"
+        rm -f "$KS_PID_FILE"
+        rm -rf "$KS_HEARTBEAT_DIR"
+    else
+        echo -e "${KS_YELLOW}⚔️ No KS Warrior instance found${KS_NC}"
+    fi
+}
+
+# ═══════════════════════════════════════════════════════════════════════════
+# KS ENTRY POINT
+# ═══════════════════════════════════════════════════════════════════════════
+
+case "${1:-start}" in
+    start)
+        ks_init
+        ks_main_loop
+        ;;
+    status)
+        ks_show_status
+        ;;
+    stop)
+        ks_stop
+        ;;
+    restart)
+        ks_stop
+        sleep 1
+        ks_init
+        ks_main_loop
+        ;;
+    *)
+        echo "⚔️ KS Warrior Usage: $0 {start|status|stop|restart}"
+        exit 1
+        ;;
+esac
